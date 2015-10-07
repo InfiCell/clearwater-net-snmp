@@ -2,7 +2,6 @@ DEBIANVER := 5.7.2~dfsg
 UBUNTUVER := 8.1ubuntu3.1
 
 DEBS := libsnmp30_5.7.2~dfsg-clearwater1_amd64.deb \
-        libsnmp30_5.7.2~dfsg-clearwater1_amd64.deb \
 				libsnmp30-dbg_5.7.2~dfsg-clearwater1_amd64.deb \
 				libsnmp-base_5.7.2~dfsg-clearwater1_all.deb \
 				libsnmp-dev_5.7.2~dfsg-clearwater1_amd64.deb \
@@ -27,6 +26,10 @@ ${DEBS} : .clearwater1.built
 	touch $@.tmp
 	apt-get source net-snmp=${DEBIANVER}-${UBUNTUVER}
 	patch -p1 < $<
-	cd net-snmp-${DEBIANVER} && dpkg-buildpackage -b -us -uc
+	cd net-snmp-${DEBIANVER} && dpkg-buildpackage -b -us -uc -d
 	${MAKE} clean_deb_source
 	mv $@.tmp $@
+
+.PHONY: print_debs
+print_debs :
+	@echo ${DEBS}
