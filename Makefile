@@ -21,7 +21,7 @@ clean_deb_source :
 
 ${DEBS}: build
 
-build: clearwater2.patch clearwater2.patch
+build: clearwater1.patch clearwater2.patch
 	apt-get source net-snmp=${DEBIANVER}-${UBUNTUVER}
 	patch -p1 < clearwater1.patch
 	patch -p1 < clearwater2.patch
