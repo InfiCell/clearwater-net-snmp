@@ -1,3 +1,10 @@
+net-snmp (5.7.2~dfsg-clearwater3) trusty; urgency=medium
+
+  * Add callback on INFORM responses
+
+ -- Project Clearwater Maintainers <maintainers@projectclearwater.org>  Fri, 04 Mar 2016 18:28:25 +0000
+
+
 net-snmp (5.7.2~dfsg-clearwater2) trusty; urgency=medium
 
   * Don't spuriously set the 'inclusive' flag on requests
