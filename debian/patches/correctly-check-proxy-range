@@ -1,0 +1,13 @@
+Description: Check requested OID against the alias name, not the real OIDs.
+
+--- net-snmp-5.7.2~dfsg.orig/agent/mibgroup/ucd-snmp/proxy.c
++++ net-snmp-5.7.2~dfsg/agent/mibgroup/ucd-snmp/proxy.c
+@@ -412,7 +412,7 @@ proxy_handler(netsnmp_mib_handler *handl
+         if (sp->base_len &&
+             reqinfo->mode == MODE_GETNEXT &&
+             (snmp_oid_compare(ourname, ourlength,
+-                              sp->base, sp->base_len) < 0)) {
++                              sp->name, sp->name_len) < 0)) {
+             DEBUGMSGTL(( "proxy", "request is out of registered range\n"));
+             /*
+              * Create GETNEXT request with an OID so the
