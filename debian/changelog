@@ -1,3 +1,10 @@
+net-snmp (5.7.2~dfsg-clearwater4) trusty; urgency=medium
+
+  * Plumb callback through send_enterprise_trap_vars
+
+ -- Project Clearwater Maintainers <maintainers@projectclearwater.org>  Fri, 22 Apr 2016 17:31:04 +0000
+
+
 net-snmp (5.7.2~dfsg-clearwater3) trusty; urgency=medium
 
   * Add callback on INFORM responses
