@@ -240,6 +240,7 @@ extern          "C" {
     int             init_master_agent(void);
     void            shutdown_master_agent(void);
     int             agent_check_and_process(int block);
+    void            netsnmp_check_delegated_requests(void);
     void            netsnmp_check_outstanding_agent_requests(void);
 
     int             netsnmp_request_set_error(netsnmp_request_info *request,

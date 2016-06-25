@@ -133,11 +133,16 @@ close_agentx_session(netsnmp_session * session, int sessid)
          * requests, so that the delegated request will be completed and
          * further requests can be processed
          */
-        netsnmp_remove_delegated_requests_for_session(session);
+	while (netsnmp_remove_delegated_requests_for_session(session)) {
+		DEBUGMSGTL(("agentx/master", "Continue removing delegated reqests\n"));
+	}
+
         if (session->subsession != NULL) {
             netsnmp_session *subsession = session->subsession;
             for(; subsession; subsession = subsession->next) {
-                netsnmp_remove_delegated_requests_for_session(subsession);
+                while (netsnmp_remove_delegated_requests_for_session(subsession)) {
+			DEBUGMSGTL(("agentx/master", "Continue removing delegated subsession reqests\n"));
+		}
             }
         }
                 
@@ -153,6 +158,7 @@ close_agentx_session(netsnmp_session * session, int sessid)
     for (sp = session->subsession; sp != NULL; sp = sp->next) {
 
         if (sp->sessid == sessid) {
+            netsnmp_remove_delegated_requests_for_session(sp);
             unregister_mibs_by_session(sp);
             unregister_index_by_session(sp);
             unregister_sysORTable_by_session(sp);
