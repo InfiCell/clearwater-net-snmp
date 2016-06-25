@@ -333,7 +333,7 @@ icmp6_stats(const char *name)
     struct stat_table icmp6stats_tbl[] = {
         {1, "%d total message%s received"},
         {2, "%d message%s dropped due to errors"},
-        {18, "%d ouput message request%s"},
+        {18, "%d output message request%s"},
         {19, "%d output message%s discarded"},
         {0, ""}
     };
