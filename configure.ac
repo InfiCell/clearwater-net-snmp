@@ -78,6 +78,9 @@ AC_SUBST(DLLIBS)
 
 AC_SUBST(PARTIALTARGETFLAGS)
 AC_SUBST(ac_cv_NETSNMP_SYSTEM_INCLUDE_FILE)
+LIBWRAP="$_wraplibs"
+AC_SUBST(LIBWRAP)
+AC_SUBST(LIBCRYPTO)
 
 AC_CONFIG_FILES([Makefile:Makefile.top:Makefile.in:Makefile.rules])
 AC_CONFIG_FILES([snmplib/Makefile:Makefile.top:snmplib/Makefile.in:Makefile.rules:snmplib/Makefile.depend])

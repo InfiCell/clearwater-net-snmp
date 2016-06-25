@@ -83,6 +83,8 @@ MIBLIB          = ../agent/libnetsnmpmibs.$(LIB_EXTENSION)$(LIB_VERSION)
 USEAGENTLIBS	= $(MIBLIB) $(AGENTLIB) $(USELIBS)
 MYSQL_LIBS	= @MYSQL_LIBS@
 MYSQL_INCLUDES	= @MYSQL_INCLUDES@
+LIBCRYPTO       = @LIBCRYPTO@
+LIBWRAP         = @LIBWRAP@
 
 VAL_LIBS	= @VAL_LIBS@
 LIBS		= $(USELIBS) $(VAL_LIBS) @LIBS@
@@ -170,7 +172,7 @@ snmptest$(EXEEXT):    snmptest.$(OSUFFIX) $(USELIBS)
 	$(LINK) ${CFLAGS} -o $@ snmptest.$(OSUFFIX) ${LDFLAGS} ${LIBS}
 
 snmptrapd$(EXEEXT):    $(TRAPD_OBJECTS) $(USETRAPLIBS) $(INSTALLLIBS)
-	$(LINK) ${CFLAGS} -o $@ $(TRAPD_OBJECTS) $(INSTALLLIBS) ${LDFLAGS} ${TRAPLIBS}
+	$(LINK) ${CFLAGS} -o $@ $(TRAPD_OBJECTS) $(INSTALLLIBS) ${LDFLAGS} ${TRAPLIBS} $(LIBWRAP)
 
 snmptrap$(EXEEXT):    snmptrap.$(OSUFFIX) $(USELIBS)
 	$(LINK) ${CFLAGS} -o $@ snmptrap.$(OSUFFIX) ${LDFLAGS} ${LIBS}
@@ -183,7 +185,7 @@ snmpset$(EXEEXT):    snmpset.$(OSUFFIX) $(USELIBS)
 	$(LINK) ${CFLAGS} -o $@ snmpset.$(OSUFFIX) ${LDFLAGS} ${LIBS}
 
 snmpusm$(EXEEXT):    snmpusm.$(OSUFFIX) $(USELIBS)
-	$(LINK) ${CFLAGS} -o $@ snmpusm.$(OSUFFIX) ${LDFLAGS} ${LIBS}
+	$(LINK) ${CFLAGS} -o $@ snmpusm.$(OSUFFIX) ${LDFLAGS} ${LIBS} $(LIBCRYPTO)
 
 snmpvacm$(EXEEXT):    snmpvacm.$(OSUFFIX) $(USELIBS)
 	$(LINK) ${CFLAGS} -o $@ snmpvacm.$(OSUFFIX) ${LDFLAGS} ${LIBS}
