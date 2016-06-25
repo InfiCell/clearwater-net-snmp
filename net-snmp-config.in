@@ -140,6 +140,9 @@ else
     --base-cflags)
       echo @CFLAGS@ @CPPFLAGS@ -I${NSC_INCLUDEDIR}
       ;;
+    --base-lib-cflags)
+      echo @LIBCFLAGS@ @CPPFLAGS@ -I${NSC_INCLUDEDIR}
+      ;;
     --cflags|--cf*)
       echo @CFLAGS@ @DEVFLAGS@ @CPPFLAGS@ -I. -I${NSC_INCLUDEDIR}
       ;;
@@ -643,6 +646,8 @@ if test "x$usage" = "xyes"; then
   echo "  These options produce the various compilation flags needed when"
   echo "  building external SNMP applications:"
   echo ""
+  echo "    --base-lib-cflags lists additional compilation flags needed for linking"
+  echo "                      against libsnmp"
   echo "    --base-cflags     lists additional compilation flags needed"
   echo "    --cflags          lists additional compilation flags needed"
   echo "                      (includes -I. and extra developer warning flags)"
