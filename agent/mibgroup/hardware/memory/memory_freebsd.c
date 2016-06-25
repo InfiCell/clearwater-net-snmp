@@ -211,11 +211,12 @@ swapmode(long pagesize)
 
 #include <sys/conf.h>
 
+kvm_t   *kd = NULL;
+
 int
 swapmode(long pagesize)
 {
     int             i, n;
-    static kvm_t   *kd = NULL;
     struct kvm_swap kswap[16];
     netsnmp_memory_info *mem;
     char buf[1024];
