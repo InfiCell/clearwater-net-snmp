@@ -888,7 +888,7 @@ The standard prefix for object identifiers (when using UCD-style output).
 Defaults to .iso.org.dod.internet.mgmt.mib\-2
 .IP MIBS
 The list of MIBs to load. Defaults to
-SNMPv2\-TC:SNMPv2\-MIB:IF\-MIB:IP\-MIB:TCP\-MIB:UDP\-MIB:SNMP\-VACM\-MIB.
+SNMPv2\-TC\:SNMPv2\-MIB:IF\-MIB:IP\-MIB\:TCP\-MIB\:UDP\-MIB\:SNMP\-VACM\-MIB.
 Overridden by the
 .B \-m
 option.
