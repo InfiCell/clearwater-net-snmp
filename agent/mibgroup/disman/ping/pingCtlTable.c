@@ -1267,7 +1267,7 @@ send_ping_trap(struct pingCtlTable_data *item,
 
     DEBUGMSG(("pingTest:send_ping_trap", "success!\n"));
 
-    send_v2trap(var_list);
+    send_v2trap(var_list, NULL, NULL);
     snmp_free_varbind(vars);
     vars = NULL;
     snmp_free_varbind(var_list);

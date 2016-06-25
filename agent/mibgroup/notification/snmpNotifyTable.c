@@ -260,7 +260,7 @@ send_notifications(int major, int minor, void *serverarg, void *clientarg)
                     send = 0;
             }
             if (send) {
-                send_trap_to_sess(sptr, template_pdu);
+                send_trap_to_sess(sptr, template_pdu, NULL, NULL);
                 ++count;
             } /* session to send to */
         } /* for(sptr) */

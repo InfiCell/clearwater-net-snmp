@@ -439,7 +439,7 @@ _mteEvent_fire_notify( struct mteEvent   *entry,     /* The event to fire  */
     /*
      * ... and send the resulting varbind list as a notification
      */
-    send_v2trap( var );
+    send_v2trap( var, NULL, NULL );
     snmp_free_varbind( var );
     return 0;
 }

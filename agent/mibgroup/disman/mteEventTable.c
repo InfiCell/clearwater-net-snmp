@@ -336,7 +336,7 @@ run_mte_events(struct mteTriggerTable_data *item,
                     DEBUGMSGOID(("mteEventTable:send_events", tc->data.objid, tc->data_len / sizeof(oid)));
                     DEBUGMSG(("mteEventTable:send_events", "\n"));
                     
-                    send_v2trap(var_list);
+                    send_v2trap(var_list, NULL, NULL);
                     snmp_free_varbind(var_list);
                 }
             }

@@ -452,8 +452,8 @@ agentx_notify(netsnmp_session * session, netsnmp_pdu *pdu)
 	}
 	else
 	{
-        send_trap_vars(-1, -1, pdu->variables);
-	}
+        send_trap_vars(-1, -1, pdu->variables, NULL, NULL);
+  }
 
     return AGENTX_ERR_NOERROR;
 }
