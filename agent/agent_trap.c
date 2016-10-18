@@ -576,6 +576,44 @@ convert_v1pdu_to_v2( netsnmp_pdu* template_v1pdu )
 }
 
 /**
+ * Captures responses or the lack there of from INFORMs that were sent
+ * 1) a response is received from an INFORM
+ * 2) one isn't received and the retries/timeouts have failed
+*/
+int
+handle_inform_response(int op, netsnmp_session * session,
+                       int reqid, netsnmp_pdu *pdu,
+                       void *magic)
+{
+    /* XXX: possibly stats update */
+    switch (op) {
+
+    case NETSNMP_CALLBACK_OP_RECEIVED_MESSAGE:
+        snmp_increment_statistic(STAT_SNMPINPKTS);
+        DEBUGMSGTL(("trap", "received the inform response for reqid=%d\n",
+                    reqid));
+        break;
+
+    case NETSNMP_CALLBACK_OP_TIMED_OUT:
+        DEBUGMSGTL(("trap",
+                    "received a timeout sending an inform for reqid=%d\n",
+                    reqid));
+        break;
+
+    case NETSNMP_CALLBACK_OP_SEND_FAILED:
+        DEBUGMSGTL(("trap",
+                    "failed to send an inform for reqid=%d\n",
+                    reqid));
+        break;
+
+    default:
+        DEBUGMSGTL(("trap", "received op=%d for reqid=%d when trying to send an inform\n", op, reqid));
+    }
+
+    return 1;
+}
+
+/**
  * This function allows you to make a distinction between generic 
  * traps from different classes of equipment. For example, you may want 
  * to handle a SNMP_TRAP_LINKDOWN trap for a particular device in a 
@@ -597,21 +635,25 @@ convert_v1pdu_to_v2( netsnmp_pdu* template_v1pdu )
  *			egp neighbor loss
  *		- SNMP_TRAP_ENTERPRISESPECIFIC:
  *			enterprise specific
- *			
+ *
  * @param specific is the specific trap value.
  *
- * @param enterprise is an enterprise oid in which you want to send specific 
- *	traps from. 
+ * @param enterprise is an enterprise oid in which you want to send specific
+ *        traps from.
  *
  * @param enterprise_length is the length of the enterprise oid, use macro,
- *	OID_LENGTH, to compute length.
+ *        OID_LENGTH, to compute length.
  *
  * @param vars is used to supply list of variable bindings to form an SNMPv2 
- *	trap.
+ *        trap.
  *
- * @param context currently unused 
+ * @param context currently unused
  *
- * @param flags currently unused 
+ * @param flags currently unused
+ *
+ * @param inform_callback is called when INFORM processing is complete
+ *
+ * @param inform_correlator is passed back on the callback
  *
  * @return void
  *
@@ -619,10 +661,12 @@ convert_v1pdu_to_v2( netsnmp_pdu* template_v1pdu )
  * @see send_v2trap
  */
 int
-netsnmp_send_traps(int trap, int specific,
+netsnmp_send_traps_ex(int trap, int specific,
                           const oid * enterprise, int enterprise_length,
                           netsnmp_variable_list * vars,
-                          const char * context, int flags)
+                          const char * context, int flags,
+                          snmp_callback inform_callback,
+                          void * inform_correlator)
 {
     netsnmp_pdu           *template_v1pdu;
     netsnmp_pdu           *template_v2pdu;
@@ -722,7 +766,6 @@ netsnmp_send_traps(int trap, int specific,
                 return -1;
             }
         }
-            
 
         /*
          * If everything's OK, convert the v2 template into an SNMPv1 trap PDU.
@@ -772,6 +815,12 @@ netsnmp_send_traps(int trap, int specific,
         }
     }
 
+    DEBUGMSGTL(("trap", "Setting up callback and correlator (%p)\n", inform_correlator));
+    template_v1pdu->inform_callback = inform_callback;
+    template_v1pdu->inform_correlator = inform_correlator;
+    template_v2pdu->inform_callback = inform_callback;
+    template_v2pdu->inform_correlator = inform_correlator;
+
     /*
      * Check whether we're ignoring authFail traps
      */
@@ -820,13 +869,15 @@ netsnmp_send_traps(int trap, int specific,
 #ifndef NETSNMP_DISABLE_SNMPV1
         if (sink->version == SNMP_VERSION_1) {
           if (template_v1pdu) {
-            send_trap_to_sess(sink->sesp, template_v1pdu);
+            send_trap_to_sess(sink->sesp, template_v1pdu,
+                              inform_callback, inform_correlator);
           }
         } else {
 #endif
           if (template_v2pdu) {
             template_v2pdu->command = sink->pdutype;
-            send_trap_to_sess(sink->sesp, template_v2pdu);
+            send_trap_to_sess(sink->sesp, template_v2pdu,
+                              inform_callback, inform_correlator);
           }
 #ifndef NETSNMP_DISABLE_SNMPV1
         }
@@ -843,55 +894,35 @@ netsnmp_send_traps(int trap, int specific,
     return 0;
 }
 
+int
+netsnmp_send_traps(int trap, int specific,
+                          const oid * enterprise, int enterprise_length,
+                          netsnmp_variable_list * vars,
+                          const char * context, int flags) {
+  return netsnmp_send_traps_ex(trap,
+                               specific,
+                               enterprise,
+                               enterprise_length,
+                               vars,
+                               context,
+                               flags,
+                               &handle_inform_response,
+                               NULL);
+}
 
 void
 send_enterprise_trap_vars(int trap,
                           int specific,
                           const oid * enterprise, int enterprise_length,
-                          netsnmp_variable_list * vars)
+                          netsnmp_variable_list * vars,
+                          snmp_callback inform_callback,
+                          void * inform_correlator)
 {
-    netsnmp_send_traps(trap, specific,
-                       enterprise, enterprise_length,
-                       vars, NULL, 0);
+    netsnmp_send_traps_ex(trap, specific,
+                          enterprise, enterprise_length,
+                          vars, NULL, 0,
+                          inform_callback, inform_correlator);
     return;
-}
-
-/**
- * Captures responses or the lack there of from INFORMs that were sent
- * 1) a response is received from an INFORM
- * 2) one isn't received and the retries/timeouts have failed
-*/
-int
-handle_inform_response(int op, netsnmp_session * session,
-                       int reqid, netsnmp_pdu *pdu,
-                       void *magic)
-{
-    /* XXX: possibly stats update */
-    switch (op) {
-
-    case NETSNMP_CALLBACK_OP_RECEIVED_MESSAGE:
-        snmp_increment_statistic(STAT_SNMPINPKTS);
-        DEBUGMSGTL(("trap", "received the inform response for reqid=%d\n",
-                    reqid));
-        break;
-
-    case NETSNMP_CALLBACK_OP_TIMED_OUT:
-        DEBUGMSGTL(("trap",
-                    "received a timeout sending an inform for reqid=%d\n",
-                    reqid));
-        break;
-
-    case NETSNMP_CALLBACK_OP_SEND_FAILED:
-        DEBUGMSGTL(("trap",
-                    "failed to send an inform for reqid=%d\n",
-                    reqid));
-        break;
-
-    default:
-        DEBUGMSGTL(("trap", "received op=%d for reqid=%d when trying to send an inform\n", op, reqid));
-    }
-
-    return 1;
 }
 
 
@@ -900,7 +931,10 @@ handle_inform_response(int op, netsnmp_session * session,
  * pdu is constructed correctly for the session type. 
  */
 void
-send_trap_to_sess(netsnmp_session * sess, netsnmp_pdu *template_pdu)
+send_trap_to_sess(netsnmp_session * sess,
+                  netsnmp_pdu *template_pdu,
+                  snmp_callback inform_callback,
+                  void *inform_correlator)
 {
     netsnmp_pdu    *pdu;
     int            result;
@@ -929,7 +963,7 @@ send_trap_to_sess(netsnmp_session * sess, netsnmp_pdu *template_pdu)
 #endif
        ) {
         result =
-            snmp_async_send(sess, pdu, &handle_inform_response, NULL);
+            snmp_async_send(sess, pdu, inform_callback, inform_correlator);
         
     } else {
         if ((sess->version == SNMP_VERSION_3) &&
@@ -955,14 +989,18 @@ send_trap_to_sess(netsnmp_session * sess, netsnmp_pdu *template_pdu)
 }
 
 void
-send_trap_vars(int trap, int specific, netsnmp_variable_list * vars)
+send_trap_vars(int trap, int specific, netsnmp_variable_list * vars,
+               snmp_callback inform_callback,
+               void * inform_correlator)
 {
     if (trap == SNMP_TRAP_ENTERPRISESPECIFIC)
         send_enterprise_trap_vars(trap, specific, objid_enterprisetrap,
-                                  OID_LENGTH(objid_enterprisetrap), vars);
+                                  OID_LENGTH(objid_enterprisetrap), vars,
+                                  inform_callback, inform_correlator);
     else
         send_enterprise_trap_vars(trap, specific, trap_version_id,
-                                  OID_LENGTH(trap_version_id), vars);
+                                  OID_LENGTH(trap_version_id), vars,
+                                  inform_callback, inform_correlator);
 }
 
 #ifndef NETSNMP_FEATURE_REMOVE_TRAP_VARS_WITH_CONTEXT
@@ -973,11 +1011,11 @@ void send_trap_vars_with_context(int trap, int specific,
     if (trap == SNMP_TRAP_ENTERPRISESPECIFIC)
         netsnmp_send_traps(trap, specific, objid_enterprisetrap,
                                   OID_LENGTH(objid_enterprisetrap), vars,
-								  context, 0);
+                  context, 0);
     else
         netsnmp_send_traps(trap, specific, trap_version_id,
                                   OID_LENGTH(trap_version_id), vars, 
-								  context, 0);
+                  context, 0);
     	
 }
 #endif /* NETSNMP_FEATURE_REMOVE_TRAP_VARS_WITH_CONTEXT */
@@ -1008,7 +1046,7 @@ void send_trap_vars_with_context(int trap, int specific,
 void
 send_easy_trap(int trap, int specific)
 {
-    send_trap_vars(trap, specific, NULL);
+    send_trap_vars(trap, specific, NULL, NULL, NULL);
 }
 
 /**
@@ -1027,6 +1065,9 @@ send_easy_trap(int trap, int specific)
  *
  * @param vars is used to supply list of variable bindings to form an SNMPv2 
  *	trap.
+ * @param inform_callback is called when the inform processing is complete.
+ * @param inform_correlator is stored in the PDU to allow the callback to
+ *  correlate with the original request.
  *
  * @return void
  *
@@ -1035,9 +1076,20 @@ send_easy_trap(int trap, int specific)
  */
 
 void
-send_v2trap(netsnmp_variable_list * vars)
+send_v2trap(netsnmp_variable_list * vars,
+            snmp_callback inform_callback,
+            void *inform_correlator)
 {
-    send_trap_vars(-1, -1, vars);
+  if (inform_callback == NULL)
+  {
+    DEBUGMSGTL(("trap", "Setting up a standard callback\n"));
+  }
+  else
+  {
+    DEBUGMSGTL(("trap", "Setting up a special callback, correlator %p\n", inform_correlator));
+  }
+
+    send_trap_vars(-1, -1, vars, inform_callback, inform_correlator);
 }
 
 /**
@@ -1065,7 +1117,7 @@ void send_v3trap(netsnmp_variable_list *vars, const char *context)
 void
 send_trap_pdu(netsnmp_pdu *pdu)
 {
-    send_trap_vars(-1, -1, pdu->variables);
+    send_trap_vars(-1, -1, pdu->variables, NULL, NULL);
 }
 #endif /* NETSNMP_FEATURE_REMOVE_SEND_TRAP_PDU */
 
