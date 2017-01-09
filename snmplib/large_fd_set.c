@@ -87,9 +87,9 @@ netsnmp_large_fd_is_set(SOCKET fd, netsnmp_large_fd_set * fdset)
  * Recent versions of glibc trigger abort() if FD_SET(), FD_CLR() or
  * FD_ISSET() is invoked with n >= FD_SETSIZE. Hence these replacement macros.
  */
-#define LFD_SET(n, p)    ((p)->fds_bits[(n)/NFDBITS] |=  (1 << ((n) % NFDBITS)))
-#define LFD_CLR(n, p)    ((p)->fds_bits[(n)/NFDBITS] &= ~(1 << ((n) % NFDBITS)))
-#define LFD_ISSET(n, p)  ((p)->fds_bits[(n)/NFDBITS] &   (1 << ((n) % NFDBITS)))
+#define LFD_SET(n, p)    ((p)->fds_bits[(n)/NFDBITS] |=  ((fd_mask)1 << ((n) % NFDBITS)))
+#define LFD_CLR(n, p)    ((p)->fds_bits[(n)/NFDBITS] &= ~((fd_mask)1 << ((n) % NFDBITS)))
+#define LFD_ISSET(n, p)  ((p)->fds_bits[(n)/NFDBITS] &   ((fd_mask)1 << ((n) % NFDBITS)))
 
 void
 netsnmp_large_fd_setfd(int fd, netsnmp_large_fd_set * fdset)
