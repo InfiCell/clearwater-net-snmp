@@ -1,3 +1,10 @@
+net-snmp (5.7.2~dfsg-clearwater7) trusty; urgency=medium
+
+  * CHANGES: snmpd: PATCH 3394386: from iraisr: large fd_set support in snmp_agent and snmp_client
+
+ -- Project Clearwater Maintainers <maintainers@projectclearwater.org>  Tue, 10 Jan 2017 16:31:01 +0000
+
+
 net-snmp (5.7.2~dfsg-clearwater6) trusty; urgency=medium
 
   * Fix large file descriptor sets on 64-bit systems
