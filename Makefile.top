@@ -27,6 +27,7 @@ man8dir		= $(mandir)/man8
 snmplibdir	= $(datadir)/snmp
 mibdir		= $(snmplibdir)/mibs
 persistentdir	= @PERSISTENT_DIRECTORY@
+sysconfdir	= @sysconfdir@
 DESTDIR         = @INSTALL_PREFIX@
 INSTALL_PREFIX  = $(DESTDIR)
 
