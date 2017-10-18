@@ -1300,6 +1300,10 @@ void *cb_data;
          netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_PRINT_NUMERIC_OIDS, 1);
          netsnmp_ds_set_int(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_OID_OUTPUT_FORMAT, NETSNMP_OID_OUTPUT_NUMERIC);
       }
+      if (SvIV(*hv_fetch((HV*)SvRV(sess_ref),"UseEnums", 8, 1)))
+         sprintval_flag = USE_ENUMS;
+      if (SvIV(*hv_fetch((HV*)SvRV(sess_ref),"UseSprintValue", 14, 1)))
+         sprintval_flag = USE_SPRINT_VALUE;
 
       sv_bless(varlist_ref, gv_stashpv("SNMP::VarList",0));
       for(vars = (pdu?pdu->variables:NULL); vars; vars = vars->next_variable) {
