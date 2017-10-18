@@ -3129,6 +3129,11 @@ int usm_discover_engineid(void *slpv, netsnmp_session *session) {
     int status, i;
     struct session_list *slp = (struct session_list *) slpv;
 
+    if (slp->session->securityEngineIDLen != 0) {
+        DEBUGMSGTL(("snmp_api", "engineID already known, skipping probe\n"));
+        return SNMPERR_SUCCESS;
+    }
+
     if (usm_build_probe_pdu(&pdu) != 0) {
         DEBUGMSGTL(("snmp_api", "unable to create probe PDU\n"));
         return SNMP_ERR_GENERR;
