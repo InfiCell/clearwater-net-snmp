@@ -1,3 +1,13 @@
+net-snmp (5.7.3~dfsg-clearwater1) trusty; urgency=medium
+
+  * CHANGES: Apply Clearwater patches, including:
+      - correctly-check-proxy-range
+      - inclusiveness.patch
+      - add_trap_send_callbacks
+      - use-snmp-select-info2
+
+ -- Project Clearwater Maintainers <maintainers@projectclearwater.org> Wed, 18 OCT 2017 15:28:35 +0000
+
 net-snmp (5.7.3+dfsg-1.7) unstable; urgency=medium
 
   [ Niels Thykier ]
