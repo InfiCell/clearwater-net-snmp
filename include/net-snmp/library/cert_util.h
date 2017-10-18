@@ -9,6 +9,10 @@
 #error "must include <openssl/x509.h> before cert_util.h"
 #endif
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000
+#error This needs to be compiled against openssl 1.0.2.
+#endif
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
