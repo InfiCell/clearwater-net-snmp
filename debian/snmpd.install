@@ -1,0 +1,6 @@
+debian/snmptrapd.conf etc/snmp/
+usr/sbin/*
+usr/share/snmp/snmpconf-data/snmpd-data
+usr/share/snmp/snmpconf-data/snmptrapd-data
+usr/share/snmp/snmp_perl.pl
+usr/share/snmp/snmp_perl_trapd.pl
