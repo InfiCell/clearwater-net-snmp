@@ -17,7 +17,7 @@ use POSIX qw(strftime);
 $ENV{LANG} = 'C';
 
 $opts{'s'} = "localhost";
-$opts{'f'} = 'root@' . `hostname`;
+$opts{'f'} = 'root@' . `hostname -f`;
 chomp($opts{'f'});
 getopts("hs:f:", \%opts);
 
