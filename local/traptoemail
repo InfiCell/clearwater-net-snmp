@@ -13,6 +13,9 @@ use Net::SMTP;
 use Getopt::Std;
 use POSIX qw(strftime);
 
+# for sane timestamp format
+$ENV{LANG} = 'C';
+
 $opts{'s'} = "localhost";
 $opts{'f'} = 'root@' . `hostname`;
 chomp($opts{'f'});
