@@ -14,6 +14,12 @@
 #include <netinet/icmp_var.h>
 #include <netinet/icmp6.h>
 
+#if defined(__FreeBSD_kernel__) && defined(__GLIBC__)
+/* definitions unavailable in GNU libc's icmp6.h */
+#define ICMP6_MAXTYPE		201
+#define ICMPV6CTL_STATS		1
+#endif
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
