@@ -5025,6 +5025,9 @@ _sess_async_send(void *sessp,
         /*
          * No response expected...  
          */
+        if ((reqid == 0) && (pdu->command == SNMP_MSG_RESPONSE)) {
+            reqid = 2;
+        }
         if (reqid) {
             /*
              * Free v1 or v2 TRAP PDU iff no error  
