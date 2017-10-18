@@ -1243,6 +1243,16 @@ sub inform {
    return(wantarray() ? @res : $res[0]);
 }
 
+sub get_sec_engine_id {
+   my $this = shift;
+   return SNMP::_get_sec_engine_id($this);
+}
+
+sub get_context_engine_id {
+   my $this = shift;
+   return SNMP::_get_context_engine_id($this);
+}
+
 package SNMP::TrapSession;
 @SNMP::TrapSession::ISA = ('SNMP::Session');
 
@@ -2038,6 +2048,17 @@ the reader since it depends on whether your code uses other callbacks
 as well.
 
 =back
+
+=item $sess->get_sec_engine_id
+
+Returns the security engine ID for the current session, whether probed
+or provided by the client, in hex format suitable for the SecEngineId
+parameter when creating a session in the future. Returns undef if we have not
+had not had any contact with the remote agent yet.
+
+=item $sess->get_context_engine_id
+
+Like get_sec_engine_id, but for the context engine ID (ContextEngineId).
 
 =back
 

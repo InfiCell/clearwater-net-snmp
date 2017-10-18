@@ -4737,6 +4737,50 @@ done:
 
 
 char *
+snmp_get_sec_engine_id(sess_ref)
+        SV *	sess_ref
+	CODE:
+	{
+           RETVAL = NULL;
+           if (SvROK(sess_ref)) {
+              SV **sess_ptr_sv = hv_fetch((HV*)SvRV(sess_ref), "SessPtr", 7, 1);
+	      SnmpSession *ss = (SnmpSession *)SvIV((SV*)SvRV(*sess_ptr_sv));
+              if (ss->securityEngineIDLen > 0) {
+                 binary_to_hex(ss->securityEngineID,
+                               ss->securityEngineIDLen,
+                               &RETVAL);
+              }
+           }
+	}
+	OUTPUT:
+        RETVAL
+        CLEANUP:
+        netsnmp_free(RETVAL);
+
+
+char *
+snmp_get_context_engine_id(sess_ref)
+        SV *	sess_ref
+	CODE:
+	{
+           RETVAL = NULL;
+           if (SvROK(sess_ref)) {
+              SV **sess_ptr_sv = hv_fetch((HV*)SvRV(sess_ref), "SessPtr", 7, 1);
+	      SnmpSession *ss = (SnmpSession *)SvIV((SV*)SvRV(*sess_ptr_sv));
+              if (ss->contextEngineIDLen > 0) {
+                 binary_to_hex(ss->contextEngineID,
+                               ss->contextEngineIDLen,
+                               &RETVAL);
+              }
+           }
+	}
+	OUTPUT:
+        RETVAL
+        CLEANUP:
+        netsnmp_free(RETVAL);
+
+
+char *
 snmp_get_type(tag, best_guess)
 	char *		tag
         int             best_guess
