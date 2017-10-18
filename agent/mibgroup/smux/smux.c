@@ -2054,7 +2054,8 @@ smux_trap_process(u_char * rsp, size_t * len)
      * send the traps 
      */
     send_enterprise_trap_vars(trap, specific, (oid *) & sa_enterpriseoid,
-                              sa_enterpriseoid_len, snmptrap_head);
+                              sa_enterpriseoid_len, snmptrap_head,
+                              NULL, NULL);
 
     /*
      * free trap variables 

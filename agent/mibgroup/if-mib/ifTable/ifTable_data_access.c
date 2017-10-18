@@ -296,7 +296,7 @@ send_linkUpDownNotifications(oid *notification_oid, size_t notification_oid_len,
      * section of the snmpd.conf manual page. 
      */
     DEBUGMSGTL(("rsys:linkUpDownNotifications", "sending the trap\n"));
-    send_v2trap(notification_vars);
+    send_v2trap(notification_vars, NULL, NULL);
 
     /*
      * free the created notification variable list 

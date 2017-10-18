@@ -722,7 +722,7 @@ write_exampletrap2(int action,
         var_obj.val.string = (unsigned char *) example_str;       /* value */
         var_obj.val_len = strlen(example_str);
         DEBUGMSGTL(("example", "write_exampletrap2 sending the v2 trap\n"));
-        send_v2trap(&var_trap);
+        send_v2trap(&var_trap, NULL, NULL);
         DEBUGMSGTL(("example", "write_exampletrap2 v2 trap sent\n"));
 
         break;
