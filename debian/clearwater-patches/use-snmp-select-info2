@@ -1,0 +1,247 @@
+diff --git a/agent/snmp_agent.c b/agent/snmp_agent.c
+index d8e5775..8927e92 100644
+--- a/agent/snmp_agent.c
++++ b/agent/snmp_agent.c
+@@ -80,6 +80,7 @@ SOFTWARE.
+ #define SNMP_NEED_REQUEST_LIST
+ #include <net-snmp/net-snmp-includes.h>
+ #include <net-snmp/agent/net-snmp-agent-includes.h>
++#include <net-snmp/library/large_fd_set.h>
+ #include <net-snmp/library/snmp_assert.h>
+
+ #if HAVE_SYSLOG_H
+@@ -634,15 +635,16 @@ _fix_endofmibview(netsnmp_agent_session *asp)
+ int
+ agent_check_and_process(int block)
+ {
+-    int             numfds;
+-    fd_set          fdset;
+-    struct timeval  timeout = { LONG_MAX, 0 }, *tvp = &timeout;
+-    int             count;
+-    int             fakeblock = 0;
++    int                  numfds;
++    netsnmp_large_fd_set fdset;
++    struct timeval       timeout = { LONG_MAX, 0 }, *tvp = &timeout;
++    int                  count;
++    int                  fakeblock = 0;
+
+     numfds = 0;
+-    FD_ZERO(&fdset);
+-    snmp_select_info(&numfds, &fdset, tvp, &fakeblock);
++    netsnmp_large_fd_set_init(&fdset, FD_SETSIZE);
++    NETSNMP_LARGE_FD_ZERO(&fdset);
++    snmp_select_info2(&numfds, &fdset, tvp, &fakeblock);
+     if (block != 0 && fakeblock != 0) {
+         /*
+          * There are no alarms registered, and the caller asked for blocking, so
+@@ -665,13 +667,13 @@ agent_check_and_process(int block)
+         timerclear(tvp);
+     }
+
+-    count = select(numfds, &fdset, NULL, NULL, tvp);
++    count = netsnmp_large_fd_set_select(numfds, &fdset, NULL, NULL, tvp);
+
+     if (count > 0) {
+         /*
+          * packets found, process them
+          */
+-        snmp_read(&fdset);
++        snmp_read2(&fdset);
+     } else
+         switch (count) {
+         case 0:
+@@ -681,10 +683,12 @@ agent_check_and_process(int block)
+             if (errno != EINTR) {
+                 snmp_log_perror("select");
+             }
+-            return -1;
++            count = -1;
++            goto exit;
+         default:
+             snmp_log(LOG_ERR, "select returned %d\n", count);
+-            return -1;
++            count = -1;
++            goto exit;
+         }                       /* endif -- count>0 */
+
+     /*
+@@ -699,6 +703,8 @@ agent_check_and_process(int block)
+
+     netsnmp_check_outstanding_agent_requests();
+
++ exit:
++    netsnmp_large_fd_set_cleanup(&fdset);
+     return count;
+ }
+ #endif /* NETSNMP_FEATURE_REMOVE_AGENT_CHECK_AND_PROCESS */
+diff --git a/agent/snmpd.c b/agent/snmpd.c
+index b177d5b..8f6c5a2 100644
+--- a/agent/snmpd.c
++++ b/agent/snmpd.c
+@@ -124,15 +124,6 @@
+ # endif
+ #endif
+
+-#ifndef FD_SET
+-typedef long    fd_mask;
+-#define NFDBITS (sizeof(fd_mask) * NBBY)        /* bits per mask */
+-#define FD_SET(n, p)    ((p)->fds_bits[(n)/NFDBITS] |= (1 << ((n) % NFDBITS)))
+-#define FD_CLR(n, p)    ((p)->fds_bits[(n)/NFDBITS] &= ~(1 << ((n) % NFDBITS)))
+-#define FD_ISSET(n, p)  ((p)->fds_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
+-#define FD_ZERO(p)      memset((p), 0, sizeof(*(p)))
+-#endif
+-
+ #include <net-snmp/net-snmp-includes.h>
+ #include <net-snmp/agent/net-snmp-agent-includes.h>
+
+diff --git a/snmplib/snmp_client.c b/snmplib/snmp_client.c
+index c1aa9c4..5211671 100644
+--- a/snmplib/snmp_client.c
++++ b/snmplib/snmp_client.c
+@@ -97,6 +97,7 @@ SOFTWARE.
+ #include <net-snmp/library/mib.h>
+ #include <net-snmp/library/snmp_logging.h>
+ #include <net-snmp/library/snmp_assert.h>
++#include <net-snmp/library/large_fd_set.h>
+ #include <net-snmp/pdu_api.h>
+
+ netsnmp_feature_child_of(snmp_client_all, libnetsnmp)
+@@ -110,16 +111,6 @@ netsnmp_feature_child_of(row_create, snmp_client_all)
+ #define BSD4_2
+ #endif
+
+-#ifndef FD_SET
+-
+-typedef long    fd_mask;
+-#define NFDBITS	(sizeof(fd_mask) * NBBY)        /* bits per mask */
+-
+-#define	FD_SET(n, p)	((p)->fds_bits[(n)/NFDBITS] |= (1 << ((n) % NFDBITS)))
+-#define	FD_CLR(n, p)	((p)->fds_bits[(n)/NFDBITS] &= ~(1 << ((n) % NFDBITS)))
+-#define	FD_ISSET(n, p)	((p)->fds_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
+-#define FD_ZERO(p)	memset((p), 0, sizeof(*(p)))
+-#endif
+
+ /*
+  * Prototype definitions
+@@ -1029,13 +1020,13 @@ snmp_synch_response_cb(netsnmp_session * ss,
+                        netsnmp_pdu *pdu,
+                        netsnmp_pdu **response, snmp_callback pcb)
+ {
+-    struct synch_state lstate, *state;
+-    snmp_callback   cbsav;
+-    void           *cbmagsav;
+-    int             numfds, count;
+-    fd_set          fdset;
+-    struct timeval  timeout, *tvp;
+-    int             block;
++    struct synch_state    lstate, *state;
++    snmp_callback         cbsav;
++    void                 *cbmagsav;
++    int                   numfds, count;
++    netsnmp_large_fd_set  fdset;
++    struct timeval        timeout, *tvp;
++    int                   block;
+
+     memset((void *) &lstate, 0, sizeof(lstate));
+     state = &lstate;
+@@ -1043,6 +1034,7 @@ snmp_synch_response_cb(netsnmp_session * ss,
+     cbmagsav = ss->callback_magic;
+     ss->callback = pcb;
+     ss->callback_magic = (void *) state;
++    netsnmp_large_fd_set_init(&fdset, FD_SETSIZE);
+
+     if ((state->reqid = snmp_send(ss, pdu)) == 0) {
+         snmp_free_pdu(pdu);
+@@ -1052,17 +1044,17 @@ snmp_synch_response_cb(netsnmp_session * ss,
+
+     while (state->waiting) {
+         numfds = 0;
+-        FD_ZERO(&fdset);
++        NETSNMP_LARGE_FD_ZERO(&fdset);
+         block = NETSNMP_SNMPBLOCK;
+         tvp = &timeout;
+         timerclear(tvp);
+-        snmp_sess_select_info_flags(0, &numfds, &fdset, tvp, &block,
+-                                    NETSNMP_SELECT_NOALARMS);
++        snmp_sess_select_info2_flags(0, &numfds, &fdset, tvp, &block,
++                                     NETSNMP_SELECT_NOALARMS);
+         if (block == 1)
+             tvp = NULL;         /* block without timeout */
+-        count = select(numfds, &fdset, NULL, NULL, tvp);
++        count = netsnmp_large_fd_set_select(numfds, &fdset, NULL, NULL, tvp);
+         if (count > 0) {
+-            snmp_read(&fdset);
++            snmp_read2(&fdset);
+         } else {
+             switch (count) {
+             case 0:
+@@ -1101,6 +1093,7 @@ snmp_synch_response_cb(netsnmp_session * ss,
+     *response = state->pdu;
+     ss->callback = cbsav;
+     ss->callback_magic = cbmagsav;
++    netsnmp_large_fd_set_cleanup(&fdset);
+     return state->status;
+ }
+
+@@ -1115,14 +1108,14 @@ int
+ snmp_sess_synch_response(void *sessp,
+                          netsnmp_pdu *pdu, netsnmp_pdu **response)
+ {
+-    netsnmp_session *ss;
+-    struct synch_state lstate, *state;
+-    snmp_callback   cbsav;
+-    void           *cbmagsav;
+-    int             numfds, count;
+-    fd_set          fdset;
+-    struct timeval  timeout, *tvp;
+-    int             block;
++    netsnmp_session      *ss;
++    struct synch_state    lstate, *state;
++    snmp_callback         cbsav;
++    void                 *cbmagsav;
++    int                   numfds, count;
++    netsnmp_large_fd_set  fdset;
++    struct timeval        timeout, *tvp;
++    int                   block;
+
+     ss = snmp_sess_session(sessp);
+     if (ss == NULL) {
+@@ -1135,6 +1128,7 @@ snmp_sess_synch_response(void *sessp,
+     cbmagsav = ss->callback_magic;
+     ss->callback = snmp_synch_input;
+     ss->callback_magic = (void *) state;
++    netsnmp_large_fd_set_init(&fdset, FD_SETSIZE);
+
+     if ((state->reqid = snmp_sess_send(sessp, pdu)) == 0) {
+         snmp_free_pdu(pdu);
+@@ -1144,17 +1138,17 @@ snmp_sess_synch_response(void *sessp,
+
+     while (state->waiting) {
+         numfds = 0;
+-        FD_ZERO(&fdset);
++        NETSNMP_LARGE_FD_ZERO(&fdset);
+         block = NETSNMP_SNMPBLOCK;
+         tvp = &timeout;
+         timerclear(tvp);
+-        snmp_sess_select_info_flags(sessp, &numfds, &fdset, tvp, &block,
+-                                    NETSNMP_SELECT_NOALARMS);
++        snmp_sess_select_info2_flags(sessp, &numfds, &fdset, tvp, &block,
++                                     NETSNMP_SELECT_NOALARMS);
+         if (block == 1)
+             tvp = NULL;         /* block without timeout */
+-        count = select(numfds, &fdset, NULL, NULL, tvp);
++        count = netsnmp_large_fd_set_select(numfds, &fdset, NULL, NULL, tvp);
+         if (count > 0) {
+-            snmp_sess_read(sessp, &fdset);
++            snmp_sess_read2(sessp, &fdset);
+         } else
+             switch (count) {
+             case 0:
+@@ -1185,6 +1179,7 @@ snmp_sess_synch_response(void *sessp,
+     *response = state->pdu;
+     ss->callback = cbsav;
+     ss->callback_magic = cbmagsav;
++    netsnmp_large_fd_set_cleanup(&fdset);
+     return state->status;
+ }
+

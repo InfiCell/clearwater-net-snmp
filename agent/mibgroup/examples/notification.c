@@ -165,7 +165,7 @@ send_example_notification(unsigned int clientreg, void *clientarg)
      */
     ++count;
     DEBUGMSGTL(("example_notification", "sending trap %ld\n",count));
-    send_v2trap(notification_vars);
+    send_v2trap(notification_vars, NULL, NULL);
 
     /*
      * free the created notification variable list 

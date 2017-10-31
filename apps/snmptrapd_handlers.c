@@ -869,7 +869,7 @@ int axforward_handler( netsnmp_pdu           *pdu,
                        netsnmp_transport     *transport,
                        netsnmp_trapd_handler *handler)
 {
-    send_v2trap( pdu->variables );
+    send_v2trap( pdu->variables , NULL, NULL);
     return NETSNMPTRAPD_HANDLER_OK;
 }
 

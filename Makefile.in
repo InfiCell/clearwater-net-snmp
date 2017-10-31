@@ -17,7 +17,7 @@ CPP		= @CPP@ 					        \
 
 INSTALLHEADERS=version.h net-snmp-features.h
 INCLUDESUBDIR=system
-INCLUDESUBDIRHEADERS= aix.h bsd.h bsdi3.h bsdi4.h bsdi.h cygwin.h \
+INCLUDESUBDIRHEADERS= aix.h bsd.h bsdi3.h bsdi4.h bsdi.h cygwin.h kfreebsd.h \
 	darwin.h darwin7.h darwin8.h darwin9.h darwin10.h dragonfly.h dynix.h \
 	freebsd2.h freebsd3.h freebsd4.h freebsd5.h freebsd6.h \
 	freebsd7.h freebsd8.h freebsd9.h freebsd10.h freebsd11.h \
@@ -171,7 +171,7 @@ OTHERCLEANTODOS=perlclean @PYTHONCLEANTARGS@ cleanfeatures perlcleanfeatures pyt
 #
 # override LD_RUN_PATH to avoid dependencies on the build directory
 perlmodules: perlmakefiles subdirs
-	@(cd perl ; $(MAKE) LD_RUN_PATH="$(libdir):`$(PERL) -e 'use Config; print qq($$Config{archlibexp}/CORE);'`") ; \
+	@(cd perl ; $(MAKE) LD_RUN_PATH="") ; \
         if test $$? != 0 ; then \
            exit 1 ; \
         fi

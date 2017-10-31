@@ -1344,7 +1344,7 @@ send_trap(const AsnObjectIdentifier * const pEnterprise,
     /*
      * Send trap. 
      */
-    send_v2trap(notification_vars);
+    send_v2trap(notification_vars, NULL, NULL);
 
     /*
      * Free the memory allocated for notification_vars. 

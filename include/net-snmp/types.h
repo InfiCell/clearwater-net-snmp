@@ -265,6 +265,13 @@ typedef struct snmp_pdu {
     int             range_subid;
     
     void           *securityStateRef;
+
+    /*
+     * Trap callback related fields
+     */
+    void *         inform_callback;
+    void *        inform_correlator;
+
 } netsnmp_pdu;
 
 
