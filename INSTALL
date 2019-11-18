@@ -39,6 +39,11 @@ QUICK INSTRUCTIONS
 Note: By default, everything will be installed in /usr/local.
       (see below for more instructions)
 
+DEBIAN
+======
+
+git-buildpackage -uc -us --git-ignore-branch --git-upstream-tree=origin/upstream
+
 Net-SNMP Specific Information
 =============================
 
