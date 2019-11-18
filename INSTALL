@@ -42,7 +42,7 @@ Note: By default, everything will be installed in /usr/local.
 DEBIAN
 ======
 
-git-buildpackage -uc -us --git-ignore-branch --git-upstream-tree=origin/upstream
+git-buildpackage -uc -us --git-ignore-branch --git-upstream-tree=origin/master
 
 Net-SNMP Specific Information
 =============================
